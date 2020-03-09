@@ -23,6 +23,10 @@ curl -L https://github.com/mhausenblas/cidrchk/releases/latest/download/cidrchk_
 
 `cidrchk` can do three things for you: 1. check CIDR ranges for inclusion, 2. check for CIDR range overlaps, and 3. generate all IPs in a CIDR range.
 
+Note that `cidrchk`  uses [OPA](https://www.openpolicyagent.org/) Rego 
+to perform CIDR operation, to be precise the 
+[built-in Net functions](https://www.openpolicyagent.org/docs/latest/policy-reference/#net).
+
 ### Check for CIDR range inclusion
 
 To check if a CIDR range contains an IP or another CIDR range:
@@ -40,14 +44,6 @@ $ cidrchk contains \
           0:3:ffff:ffff:ffff:ffff:ffff:ffff
 yes
 ``` 
-
-Together with `jq` one can also answer questions like "How many IP addresses
- are there in a CIDR range", for example:
-
-```
-$ cidrchk expand 192.168.0.0/16 | jq '.ips[] | length'
-65536
-```
 
 ### Check for CIDR range overlaps
 
@@ -77,6 +73,9 @@ $ cidrchk expand 192.168.0.0/30 | jq .
 }
 ```
 
-Note that `cidrchk`  uses [OPA](https://www.openpolicyagent.org/) Rego 
-to perform CIDR operation, to be precise the 
-[built-in Net functions](https://www.openpolicyagent.org/docs/latest/policy-reference/#net).
+One can also answer questions like "How many IP addresses are there in a CIDR range", for example:
+
+```
+$ cidrchk expand 192.168.0.0/16 | jq '.ips[] | length'
+65536
+```

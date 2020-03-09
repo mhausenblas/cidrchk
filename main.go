@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"os"
@@ -13,6 +14,37 @@ var (
 	version = "dev"
 	commit  = "none"
 	date    = "unknown"
+	// the Rego rules for CIDR operations, see also the standalone example
+	// in cidrchck.rego which you can test with the opa CLI like so:
+	// opa eval --input input.json --data cidrchk.rego --package cidrchck 'contains'
+	module = `package cidrchck
+
+		default contains = "no"
+		default overlaps = "no"
+
+		contains = "yes" {
+			cr := input.targetcidr
+			ior := input.incidr
+			net.cidr_contains(cr, ior)
+		}
+
+		contains = "yes" {
+			cr := input.targetcidr
+			ior := input.inip
+			net.cidr_contains(cr, ior)
+		}
+
+		overlaps = "yes" {
+			cr := input.targetcidr
+			ior := input.incidr
+			net.cidr_intersects(cr, ior)
+		}
+
+		expand[ips] {
+			cr := input.incidr
+			ips := net.cidr_expand(cr)
+		}
+	`
 )
 
 func main() {
@@ -35,44 +67,104 @@ func main() {
 
 	switch command {
 	case "contains":
-		contains(os.Args[2], os.Args[3])
+		result, err := contains(os.Args[2], os.Args[3])
+		if err != nil {
+			fmt.Println(err)
+		}
+		fmt.Println(result)
 	case "overlaps":
-		fmt.Println("overlaps not yet implemented")
+		result, err := overlaps(os.Args[2], os.Args[3])
+		if err != nil {
+			fmt.Println(err)
+		}
+		fmt.Println(result)
 	case "expand":
-		fmt.Println("expand not yet implemented")
+		result, err := expand(os.Args[2])
+		if err != nil {
+			fmt.Println(err)
+		}
+		fmt.Println(result)
 	default:
 		fmt.Println("unknown command")
 		flag.Usage()
 	}
 }
 
-func contains(cidrange, iporcidrange string) {
-	fmt.Printf("Checking if %v is in %v:\n", iporcidrange, cidrange)
-	query, err := rego.New(
-		rego.Query("x = data.example.authz.allow"),
+// contains returns "yes" if the  input IP or CIDR is in the target CIDR
+// and it returns "no" otherwise
+func contains(targetcidr, iporcidr string) (string, error) {
+	// log.Printf("Checking if %v is in %v:\n", iporcidr, targetcidr)
+	reg := rego.New(
+		rego.Query("data.cidrchck.contains"),
 		rego.Module("example.rego", module),
-	).PrepareForEval(ctx)
-
+		rego.Input(
+			map[string]interface{}{
+				"targetcidr": targetcidr,
+				"inip":       iporcidr,
+				"incidr":     iporcidr,
+			},
+		),
+	)
+	ctx := context.Background()
+	rs, err := reg.Eval(ctx)
 	if err != nil {
-		// Handle error.
+		return "", err
 	}
-	input := map[string]interface{}{
-		"method": "GET",
-		"path":   []interface{}{"salary", "bob"},
-		"subject": map[string]interface{}{
-			"user":   "bob",
-			"groups": []interface{}{"sales", "marketing"},
-		},
-	}
+	result := fmt.Sprintf("%v\n", rs[0].Expressions[0])
+	return result, nil
+}
 
-	results, err := query.Eval(context.Context, rego.EvalInput(input))
+// overlaps returns "yes" if the input CIDR overlaps with the target CIDR
+// and it returns "no" otherwise
+func overlaps(targetcidr, inputcidr string) (string, error) {
+	// log.Printf("Checking if %v overlaps with %v:\n", inputcidr, targetcidr)
+	reg := rego.New(
+		rego.Query("data.cidrchck.overlaps"),
+		rego.Module("example.rego", module),
+		rego.Input(
+			map[string]interface{}{
+				"targetcidr": targetcidr,
+				"incidr":     inputcidr,
+			},
+		),
+	)
+	ctx := context.Background()
+	rs, err := reg.Eval(ctx)
 	if err != nil {
-		// Handle evaluation error.
-	} else if len(results) == 0 {
-		// Handle undefined result.
-	} else if result, ok := results[0].Bindings["x"].(bool); !ok {
-		// Handle unexpected result type.
-	} else {
-		// Handle result/decision.
+		return "", err
 	}
+	result := fmt.Sprintf("%v\n", rs[0].Expressions[0])
+	return result, nil
+}
+
+// expand generates a list of all IP addresses in the CIDR
+func expand(cidr string) (string, error) {
+	// log.Printf("Expanding CIDR %v:\n", cidr)
+	reg := rego.New(
+		rego.Query("data.cidrchck.expand"),
+		rego.Module("example.rego", module),
+		rego.Input(
+			map[string]interface{}{
+				"incidr": cidr,
+			},
+		),
+	)
+	ctx := context.Background()
+	rs, err := reg.Eval(ctx)
+	if err != nil {
+		return "", err
+	}
+	type ipsofcidr struct {
+		CIDR string      `json:"cidr"`
+		IPs  interface{} `json:"ips"`
+	}
+	ips := ipsofcidr{
+		CIDR: cidr,
+		IPs:  rs[0].Expressions[0].Value,
+	}
+	val, err := json.Marshal(ips)
+	if err != nil {
+		return "", err
+	}
+	return string(val), nil
 }

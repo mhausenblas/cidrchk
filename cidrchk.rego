@@ -1,28 +1,27 @@
 package cidrchck
 
-default contains = false
-default overlaps = false
+default contains = "no"
+default overlaps = "no"
 
-contains {
+contains = "yes" {
     cr := input.targetcidr
     ior := input.incidr
     net.cidr_contains(cr, ior)
 }
 
-contains {
+contains = "yes"  {
     cr := input.targetcidr
     ior := input.inip
     net.cidr_contains(cr, ior)
 }
 
-overlaps {
+overlaps = "yes" {
     cr := input.targetcidr
     ior := input.incidr
     net.cidr_intersects(cr, ior)
 }
 
-expand[msg] {
+expand[ips] {
     cr := input.incidr
     ips := net.cidr_expand(cr)
-    msg := sprintf("%v", [ips])
 }

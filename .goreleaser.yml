@@ -1,0 +1,28 @@
+project_name: cidrchk
+release:
+  github:
+    owner: mhausenblas
+    name: cidrchk
+builds:
+  - id: cidrchk
+    goos:
+    - linux
+    - darwin
+    - windows
+    goarch:
+    - amd64
+    - "386"
+    - arm
+    - arm64
+    env:
+      - CGO_ENABLED=0
+      - GO111MODULE=on
+    main: .
+archives:
+  - id: cidrchk
+    builds:
+    - cidrchk
+    name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
+    format_overrides:
+    - goos: windows
+      format: zip

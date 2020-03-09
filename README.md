@@ -35,9 +35,9 @@ yes
 This also works for IPv6 addresses, for example:
 
 ```
-$ cidrcheck contains \
-            0:0:0:0:0:ffff:c0a8:0/30 \
-            0:3:ffff:ffff:ffff:ffff:ffff:ffff
+$ cidrchk contains \
+          0:0:0:0:0:ffff:c0a8:0/30 \
+          0:3:ffff:ffff:ffff:ffff:ffff:ffff
 yes
 ``` 
 

@@ -50,8 +50,8 @@ var (
 func main() {
 	// Define the CLI API:
 	flag.Usage = func() {
-		fmt.Printf("Usage:\n %s \n", os.Args[0])
-		fmt.Println("Example usage:\n cidrchk")
+		fmt.Printf("Usage:\n %s contains $CIDR_TARGET $IP_OR_CIDR | overlaps $CIDR0 $CIDR1 | expand $CIDR\n", os.Args[0])
+		fmt.Println("Example usage:\n cidrchk contains 192.168.0.0/16 192.168.0.42\nyes")
 		fmt.Println("Arguments:")
 		flag.PrintDefaults()
 	}
@@ -62,9 +62,12 @@ func main() {
 		fmt.Printf("%v, commit %v, built at %v\n", version, commit, date)
 		os.Exit(0)
 	}
-
+	if len(os.Args) == 0 {
+		fmt.Printf("Need a command to proceed!\n\n")
+		flag.Usage()
+		os.Exit(1)
+	}
 	command := os.Args[1]
-
 	switch command {
 	case "contains":
 		result, err := contains(os.Args[2], os.Args[3])

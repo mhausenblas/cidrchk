@@ -62,7 +62,7 @@ func main() {
 		fmt.Printf("%v, commit %v, built at %v\n", version, commit, date)
 		os.Exit(0)
 	}
-	if len(os.Args) == 0 {
+	if len(os.Args) == 1 {
 		fmt.Printf("Need a command to proceed!\n\n")
 		flag.Usage()
 		os.Exit(1)

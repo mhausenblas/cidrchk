@@ -31,6 +31,10 @@ $ cidrchk contains 192.168.0.0/16 192.168.0.42
 yes
 ```
 
+Note that this also works for IPv6, for example 
+`contains 0:0:0:0:0:ffff:c0a8:0/30 0:3:ffff:ffff:ffff:ffff:ffff:ffff` would be
+a valid query and will be answered with `yes`.
+
 To Check if two CIDR ranges overlap:
 
 ```

@@ -1,5 +1,7 @@
 # cidrchk
 
+![.github/workflows/release.yml](https://github.com/mhausenblas/cidrchk/workflows/.github/workflows/release.yml/badge.svg)
+
 A CLI tool to assist you with CIDR ranges and IPs. 
 
 ## Install it

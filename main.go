@@ -68,6 +68,7 @@ func main() {
 		os.Exit(1)
 	}
 	command := os.Args[1]
+	var exitCode int
 	switch command {
 	case "contains":
 		result, err := contains(os.Args[2], os.Args[3])
@@ -75,12 +76,18 @@ func main() {
 			fmt.Println(err)
 		}
 		fmt.Println(result)
+		if result == "no\n" {
+			exitCode = 1
+		}
 	case "overlaps":
 		result, err := overlaps(os.Args[2], os.Args[3])
 		if err != nil {
 			fmt.Println(err)
 		}
 		fmt.Println(result)
+		if result == "no\n" {
+			exitCode = 1
+		}
 	case "expand":
 		result, err := expand(os.Args[2])
 		if err != nil {
@@ -89,8 +96,10 @@ func main() {
 		fmt.Println(result)
 	default:
 		fmt.Println("unknown command")
+		exitCode = 1
 		flag.Usage()
 	}
+	os.Exit(exitCode)
 }
 
 // contains returns "yes" if the  input IP or CIDR is in the target CIDR

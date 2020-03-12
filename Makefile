@@ -1,4 +1,4 @@
-release_version:= v0.4
+release_version:= v0.5
 
 export GO111MODULE=on
 
